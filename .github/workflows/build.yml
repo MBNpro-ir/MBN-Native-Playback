@@ -22,16 +22,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Only what the build and the 64-bit smoke test use. make, git, curl, xz, zip and pipx are on the runner already.
       - name: Install tools
+        timeout-minutes: 10
         run: |
-          sudo dpkg --add-architecture i386
           sudo apt-get update
           sudo apt-get install --no-install-recommends -y \
-            gcc-mingw-w64-x86-64 g++-mingw-w64-x86-64 mingw-w64-tools nasm ninja-build pkgconf cmake make \
-            python3-venv xz-utils wine64 wine
-          python3 -m venv "$RUNNER_TEMP/venv"
-          "$RUNNER_TEMP/venv/bin/pip" install --quiet meson==1.7.0
-          echo "$RUNNER_TEMP/venv/bin" >> "$GITHUB_PATH"
+            gcc-mingw-w64-x86-64 g++-mingw-w64-x86-64 nasm ninja-build pkgconf wine64
+          pipx install meson==1.7.0
 
       - name: Build
         run: ./build.sh
@@ -42,8 +40,8 @@ jobs:
       - name: Smoke test under Wine
         run: |
           $TARGET-gcc-posix -O2 -Idist/include smoke/smoke.c -o dist/smoke.exe -Lwork/prefix/lib -lmpv
-          wineboot --init
-          (cd dist && wine smoke.exe)
+          wine=$(command -v wine64 || echo /usr/lib/wine/wine64)
+          (cd dist && "$wine" smoke.exe)
           rm dist/smoke.exe
 
       - name: Package
