@@ -48,12 +48,23 @@ int main(void)
         return 1;
     }
     const char *options[][2] = {
-        {"vo", "null"}, {"ao", "null"}, {"config", "no"}, {"load-scripts", "no"}, {"ytdl", "no"},
-        {"osd-level", "0"}, {"terminal", "no"}, {"hr-seek", "yes"}, {"keep-open", "yes"}, {"pause", "yes"},
+        {"vo", "null"}, {"ao", "null"}, {"config", "no"}, {"osd-level", "0"}, {"terminal", "no"},
+        {"hr-seek", "yes"}, {"keep-open", "yes"}, {"pause", "yes"},
     };
     for (size_t i = 0; i < sizeof(options) / sizeof(options[0]); i++)
         check(mpv_set_option_string(mpv, options[i][0], options[i][1]), options[i][0]);
     check(mpv_initialize(mpv), "initialize");
+
+    // No scripting is built in (no Lua, JavaScript or C plugins), so neither are the options that control scripts or
+    // the yt-dlp hook (a script): nothing can fetch from the network or run code from a file.
+    const char *absent[] = {"options/load-scripts", "options/scripts", "options/ytdl"};
+    for (size_t i = 0; i < sizeof(absent) / sizeof(absent[0]); i++) {
+        char *value = mpv_get_property_string(mpv, absent[i]);
+        if (value) {
+            fprintf(stderr, "FAIL: %s exists (%s), so scripting is built in\n", absent[i], value);
+            return 1;
+        }
+    }
 
     char *version = mpv_get_property_string(mpv, "mpv-version");
     char *ffmpeg = mpv_get_property_string(mpv, "ffmpeg-version");
