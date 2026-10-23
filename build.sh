@@ -4,7 +4,9 @@
 # what libmpv's OpenGL render API needs: no Vulkan, shaderc, SPIRV-Cross, Lua or JavaScript.
 #
 # Output: dist/ (the DLLs, headers, licences and BUILDINFO.txt) and sources/ (every source tree it was built from).
-set -euo pipefail
+set -Eeuo pipefail
+# set -e stops without saying why; this says which command failed, and where.
+trap 'echo "error: build.sh line $LINENO: $BASH_COMMAND" >&2' ERR
 
 root=$PWD
 . "$root/versions.env"
@@ -216,23 +218,33 @@ queue=(libmpv-2.dll)
 while [ ${#queue[@]} -gt 0 ]; do
     dll=${queue[0]}
     queue=("${queue[@]:1}")
-    [ -n "${seen[$dll]:-}" ] && continue
+    if [ -n "${seen[$dll]:-}" ]; then continue; fi
     seen[$dll]=1
     found=""
     for dir in "$prefix/bin" "${toolchain_dirs[@]}"; do
         if [ -f "$dir/$dll" ]; then found="$dir/$dll"; break; fi
     done
-    [ -z "$found" ] && continue
+    if [ -z "$found" ]; then continue; fi
     cp -p "$found" "$dist/"
     while read -r dep; do queue+=("$dep"); done < <($TARGET-objdump -p "$found" | sed -n 's/^\s*DLL Name: //p')
 done
 
-# Each project's licence notices, as the LGPL and the others require.
+# Each project's licence notices, as the LGPL and the others require: whichever of the files named it has, and at
+# least one.
 copy_licenses() {
-    local name=$1 dir=$2
+    local name=$1 dir=$2 copied=0
     shift 2
     mkdir -p "$dist/licenses/$name"
-    for f in "$@"; do [ -f "$dir/$f" ] && cp "$dir/$f" "$dist/licenses/$name/"; done
+    for f in "$@"; do
+        if [ -f "$dir/$f" ]; then
+            cp "$dir/$f" "$dist/licenses/$name/"
+            copied=1
+        fi
+    done
+    if [ "$copied" = 0 ]; then
+        echo "error: no licence file for $name in $dir (looked for: $*)" >&2
+        exit 1
+    fi
 }
 copy_licenses mpv "$src/mpv" LICENSE.LGPL Copyright
 copy_licenses ffmpeg "$src/ffmpeg" COPYING.LGPLv2.1 LICENSE.md
