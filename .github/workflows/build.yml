@@ -40,9 +40,10 @@ jobs:
       - name: Smoke test under Wine
         run: |
           $TARGET-gcc-posix -O2 -Idist/include smoke/smoke.c -o dist/smoke.exe -Lwork/prefix/lib -lmpv
+          cp smoke/clip.mp4 dist/
           wine=$(command -v wine64 || echo /usr/lib/wine/wine64)
           (cd dist && "$wine" smoke.exe)
-          rm dist/smoke.exe
+          rm dist/smoke.exe dist/clip.mp4
 
       - name: Package
         id: package

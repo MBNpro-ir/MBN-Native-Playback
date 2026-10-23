@@ -1,5 +1,6 @@
-// Smoke test, run under Wine: loads libmpv with no video or audio output, plays a generated test pattern, seeks
-// exactly to a time between keyframes, steps one frame, and prints mpv's and FFmpeg's versions and mpv's configuration.
+// Smoke test, run under Wine: loads libmpv with no video or audio output, opens clip.mp4 (a 20-second H.264 test pattern,
+// 25 fps, keyframes only at 0 s and 10 s), seeks exactly to a time between keyframes, steps one frame, and prints mpv's
+// and FFmpeg's versions and mpv's configuration.
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -75,10 +76,12 @@ int main(void)
         return 1;
     }
 
-    // Keyframes every 10 s, so only an exact seek lands at 6.2 s.
-    const char *load[] = {"loadfile", "av://lavfi:testsrc=duration=20:rate=25:size=320x240,format=yuv420p", NULL};
+    // Keyframes only at 0 s and 10 s, so only an exact seek lands at 6.2 s.
+    const char *load[] = {"loadfile", "clip.mp4", NULL};
     check(mpv_command(mpv, load), "loadfile");
     wait_for(MPV_EVENT_FILE_LOADED);
+    // Loading ends with a playback restart of its own; the seek's comes after it.
+    wait_for(MPV_EVENT_PLAYBACK_RESTART);
 
     const char *seek[] = {"seek", "6.2", "absolute+exact", NULL};
     check(mpv_command(mpv, seek), "seek");
