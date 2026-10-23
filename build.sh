@@ -229,6 +229,9 @@ while [ ${#queue[@]} -gt 0 ]; do
     while read -r dep; do queue+=("$dep"); done < <($TARGET-objdump -p "$found" | sed -n 's/^\s*DLL Name: //p')
 done
 
+# Without debug symbols, which nothing at runtime needs (the MinGW runtime's libstdc++ alone carries about 24 MB).
+$TARGET-strip --strip-unneeded "$dist"/*.dll
+
 # Each project's licence notices, as the LGPL and the others require: whichever of the files named it has, and at
 # least one.
 copy_licenses() {
