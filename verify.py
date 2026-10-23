@@ -41,8 +41,15 @@ for dll in [d for d in dlls if re.match(r"(avcodec|avformat|avutil|avfilter|avde
         if flag in data:
             problems.append(f"{dll.name} was configured with {flag.decode()}")
 
-# GPL-only encoders whose banners are compiled into anything that links them.
-markers = {b"x264 - core": "x264", b"x265 (build": "x265", b"libx264 H.264": "FFmpeg's libx264 wrapper", b"libx265 H.265": "FFmpeg's libx265 wrapper"}
+# GPL-only encoders: their own banners, which are compiled into anything that links them, and FFmpeg's wrappers.
+# Not "x264 - core %d" alone: FFmpeg's H.264 decoder has that too, to read the banner x264 writes into what it encodes
+# (libavcodec/h2645_sei.c).
+markers = {
+    b"H.264/MPEG-4 AVC codec - Copy": "x264",
+    b"x265 (build": "x265",
+    b"libx264 H.264": "FFmpeg's libx264 encoder",
+    b"libx265 H.265": "FFmpeg's libx265 encoder",
+}
 for dll in dlls:
     data = contents(dll)
     for marker, name in markers.items():

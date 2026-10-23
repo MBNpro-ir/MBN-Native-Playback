@@ -21,7 +21,7 @@ Only what libmpv's OpenGL render API needs is built: no Vulkan, shaderc, SPIRV-C
 Every build, before anything is published:
 
 1. **Pinned sources.** Each git source is cloned at its tag and must be at the commit in `versions.env`; each tarball must match its SHA-256.
-2. **LGPL.** `verify.py` checks that `libmpv-2.dll` was configured with `-Dgpl=false`, that every FFmpeg DLL reports "LGPL version 2.1 or later" and wasn't configured with `--enable-gpl`, `--enable-nonfree` or `--enable-version3`, and that no DLL contains x264 or x265.
+2. **LGPL.** `verify.py` checks that `libmpv-2.dll` was configured with `-Dgpl=false`, that every FFmpeg DLL reports "LGPL version 2.1 or later" and wasn't configured with `--enable-gpl`, `--enable-nonfree` or `--enable-version3`, and that no DLL contains x264 or x265 (their own banners, or FFmpeg's encoders for them).
 3. **Smoke test.** Under Wine, `smoke/smoke.c` loads libmpv, plays a generated test pattern with keyframes 10 s apart, seeks exactly to 6.2 s, and steps one frame (40 ms).
 
 ## Building
