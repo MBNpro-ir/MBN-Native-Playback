@@ -142,6 +142,8 @@ endgroup
 ffmpeg_args=(
     --prefix=/ --target-os=mingw32 --arch=x86_64 --enable-cross-compile --cross-prefix="$TARGET-"
     --pkg-config=pkg-config --cc="$CC" --cxx="$CXX" $shared
+    # iconv and zlib are found by the compiler, not pkg-config.
+    --extra-cflags="-I$prefix/include" --extra-ldflags="-L$prefix/lib"
     --disable-doc --disable-programs --disable-network
     --enable-libdav1d --enable-zlib --enable-iconv
 )
