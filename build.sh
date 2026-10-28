@@ -146,7 +146,7 @@ ffmpeg_args=(
     --pkg-config=pkg-config --cc="$CC" --cxx="$CXX" $shared
     # iconv and zlib are found by the compiler, not pkg-config.
     --extra-cflags="-I$prefix/include" --extra-ldflags="-L$prefix/lib"
-    --disable-doc --disable-programs --disable-network
+    --disable-doc --disable-programs --enable-network --enable-schannel
     --enable-libdav1d --enable-zlib --enable-iconv
 )
 group "FFmpeg"
@@ -159,7 +159,7 @@ group "libplacebo"
 builddir "$src/libplacebo"
 meson setup .. --cross-file "$prefix/crossfile" --prefix=/ \
     -Ddemos=false -Dtests=false -Dopengl=enabled -Dlcms=enabled \
-    -Dd3d11=disabled -Dvulkan=disabled -Dshaderc=disabled -Dglslang=disabled
+    -Dd3d11=enabled -Dvulkan=disabled -Dshaderc=disabled -Dglslang=disabled
 install_build
 endgroup
 
@@ -191,7 +191,7 @@ endgroup
 mpv_args=(
     -Dgpl=false -Dlibmpv=true -Dcplayer=false -Dbuild-date=false -Dtests=false
     -Dlua=disabled -Djavascript=disabled -Dcplugins=disabled
-    -Dvulkan=disabled -Dshaderc=disabled -Dspirv-cross=disabled -Dd3d11=disabled
+    -Dvulkan=disabled -Dshaderc=disabled -Dspirv-cross=disabled -Dd3d11=enabled
     -Dlibarchive=disabled -Dlibbluray=disabled -Ddvdnav=disabled -Dcdda=disabled -Duchardet=disabled
     -Drubberband=disabled -Dvapoursynth=disabled -Dzimg=disabled -Djpeg=disabled
     -Dmanpage-build=disabled -Dhtml-build=disabled -Dpdf-build=disabled
