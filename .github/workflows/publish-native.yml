@@ -1,0 +1,34 @@
+name: Publish verified native build
+on:
+  workflow_dispatch:
+    inputs:
+      run_id:
+        required: true
+        default: '40710421212'
+permissions:
+  contents: write
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: ${{ inputs.run_id }}
+          name: libmpv-lgpl-main-x86_64
+          path: out
+      - name: Verify and publish third-party native files
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cd out
+          sha256sum -c SHA256SUMS
+          unzip -q libmpv-lgpl-main-x86_64.zip -d checked
+          python3 - <<'PY'
+          import hashlib,json,pathlib
+          root=pathlib.Path('checked')
+          files=[dict(name=p.name,sha256=hashlib.sha256(p.read_bytes()).hexdigest(),size=p.stat().st_size) for p in root.glob('*.dll')]
+          pathlib.Path('WINDOWS-LIBRARIES.json').write_text(json.dumps(files,indent=2))
+          PY
+          cat WINDOWS-LIBRARIES.json
+          gh release create lgpl-20261028-r1 libmpv-lgpl-main-x86_64.zip libmpv-lgpl-main-x86_64-sources.tar.xz SHA256SUMS WINDOWS-LIBRARIES.json --repo "$GITHUB_REPOSITORY" --target b481284dc5349f842ef4b81c468df1cf83af673e --title 'Windows LGPL native playback 2026-10-28' --notes 'LGPL libmpv and FFmpeg with HTTPS/Schannel, ANGLE render API and D3D hardware decoding. Includes complete corresponding dependency sources, licenses and exact recipes at b481284dc5349f842ef4b81c468df1cf83af673e. Build and native seek/frame smoke tests passed in run 40710421212. Application source is not included.'
