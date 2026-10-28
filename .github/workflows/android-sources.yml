@@ -1,0 +1,16 @@
+name: Android corresponding sources
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  sources:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - run: bash android-sources.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: android-corresponding-sources
+          path: out/
