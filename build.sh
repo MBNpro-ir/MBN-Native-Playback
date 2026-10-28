@@ -139,8 +139,7 @@ meson setup .. --cross-file "$prefix/crossfile" --prefix=/ -Dtests=disabled -Dut
 install_build
 endgroup
 
-# LGPL: no --enable-gpl, --enable-version3 or --enable-nonfree. No network: the app plays only local files (ADR-0009
-# in media-manager).
+# LGPL: no GPL/nonfree components; HTTPS streaming uses Windows Schannel.
 ffmpeg_args=(
     --prefix=/ --target-os=mingw32 --arch=x86_64 --enable-cross-compile --cross-prefix="$TARGET-"
     --pkg-config=pkg-config --cc="$CC" --cxx="$CXX" $shared
@@ -191,12 +190,18 @@ endgroup
 mpv_args=(
     -Dgpl=false -Dlibmpv=true -Dcplayer=false -Dbuild-date=false -Dtests=false
     -Dlua=disabled -Djavascript=disabled -Dcplugins=disabled
-    -Dvulkan=disabled -Dshaderc=disabled -Dspirv-cross=disabled -Dd3d11=enabled
+    -Dvulkan=disabled -Dshaderc=disabled -Dspirv-cross=disabled -Dd3d11=disabled -Dd3d-hwaccel=enabled -Degl-angle=enabled -Degl-angle-lib=disabled
     -Dlibarchive=disabled -Dlibbluray=disabled -Ddvdnav=disabled -Dcdda=disabled -Duchardet=disabled
     -Drubberband=disabled -Dvapoursynth=disabled -Dzimg=disabled -Djpeg=disabled
     -Dmanpage-build=disabled -Dhtml-build=disabled -Dpdf-build=disabled
     -Dgl=enabled -Dlcms2=enabled -Dlibavdevice=enabled -Dwasapi=enabled
 )
+# Header-only ANGLE API declarations, matching the app's separately bundled ANGLE.
+# EGL is loaded dynamically. D3D11 hardware decoding remains enabled; mpv's
+# standalone D3D11 video output (shaderc/SPIRV-Cross) is not used by libmpv render API.
+mkdir -p "$src/angle-headers"
+cp -r "$root/angle-headers/." "$src/angle-headers/"
+cp -r "$src/angle-headers/." "$prefix/include/"
 group "mpv"
 cd "$src/mpv"
 rm -rf builddir
@@ -261,6 +266,7 @@ copy_licenses fribidi "$src/fribidi-1.0.17" COPYING
 copy_licenses zlib "$src/zlib-1.3.2" LICENSE README
 copy_licenses libiconv "$src/libiconv-1.18" COPYING.LIB
 copy_licenses mingw-w64-runtime "/usr/share/doc/mingw-w64-common" copyright
+copy_licenses angle-headers "$src/angle-headers" NOTICE.txt
 copy_licenses gcc-runtime "/usr/share/doc/gcc-mingw-w64-base" copyright
 
 {

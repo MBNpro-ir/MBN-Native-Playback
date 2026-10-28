@@ -1,0 +1,4 @@
+ANGLE / Khronos EGL headers, from flutter-windows-ANGLE-OpenGL-ES v1.0.1.
+https://github.com/alexmercerind/flutter-windows-ANGLE-OpenGL-ES/releases/tag/v1.0.1
+The original copyright and license notices are preserved in each header.
+Archive SHA256: cc5911bb15d596fd5a2b362613ad35b7093b427117269a7359054a65746a5f9a
