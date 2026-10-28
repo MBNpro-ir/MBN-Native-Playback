@@ -159,7 +159,7 @@ group "libplacebo"
 builddir "$src/libplacebo"
 meson setup .. --cross-file "$prefix/crossfile" --prefix=/ \
     -Ddemos=false -Dtests=false -Dopengl=enabled -Dlcms=enabled \
-    -Dd3d11=enabled -Dvulkan=disabled -Dshaderc=disabled -Dglslang=disabled
+    -Dd3d11=disabled -Dvulkan=disabled -Dshaderc=disabled -Dglslang=disabled
 install_build
 endgroup
 
