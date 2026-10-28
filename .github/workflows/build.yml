@@ -5,6 +5,7 @@ name: build
 on:
   push:
     branches: [main]
+    paths: [build.sh, versions.env, verify.py, "angle-headers/**", "smoke/**", .github/workflows/build.yml]
     tags: ['mpv-*']
   pull_request:
   workflow_dispatch:

@@ -50,7 +50,7 @@ for component in (Path('recipe/buildscripts/deps')).iterdir():
   if p.is_file(): files.append('\n==== '+component.name+'/'+name+' ====\n'+p.read_text(errors='replace'))
 Path('ANDROID-NOTICES.txt').write_text(Path('README.txt').read_text()+''.join(files))
 PY
-mkdir -p ../../out
-cp ANDROID-NOTICES.txt ../../out/
-tar --exclude=.git -cJf ../../out/android-libmpv-v1.1.7-sources.tar.xz .
-(cd ../../out && sha256sum android-* > ANDROID-SHA256SUMS)
+mkdir -p ../out
+cp ANDROID-NOTICES.txt ../out/
+tar --exclude=.git -cJf ../out/android-libmpv-v1.1.7-sources.tar.xz .
+(cd ../out && sha256sum android-* > ANDROID-SHA256SUMS)
