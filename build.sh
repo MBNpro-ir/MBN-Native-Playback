@@ -11,6 +11,15 @@ trap 'echo "error: build.sh line $LINENO: $BASH_COMMAND" >&2' ERR
 root=$PWD
 . "$root/versions.env"
 
+# Containers can report the host CPU count instead of their actual quota.
+# Bound every compiler scheduler together so Ninja/Make cannot exhaust RAM.
+jobs=${MBN_BUILD_JOBS:-2}
+if ! [[ "$jobs" =~ ^[1-9][0-9]*$ ]]; then
+    echo "error: MBN_BUILD_JOBS must be a positive integer" >&2
+    exit 1
+fi
+echo "Native compiler concurrency: $jobs"
+
 export TARGET=${TARGET:-x86_64-w64-mingw32}
 src=$root/work/src
 prefix=$root/work/prefix
@@ -92,11 +101,11 @@ builddir() {
 
 install_build() {
     if [ -f build.ninja ]; then
-        ninja
-        DESTDIR="$prefix" ninja install
+        ninja -j"$jobs"
+        DESTDIR="$prefix" ninja -j"$jobs" install
     else
-        make -j"$(nproc)"
-        make DESTDIR="$prefix" install
+        make -j"$jobs"
+        make -j"$jobs" DESTDIR="$prefix" install
     fi
 }
 
@@ -207,7 +216,7 @@ cd "$src/mpv"
 rm -rf builddir
 CFLAGS="$CFLAGS -I$prefix/include" LDFLAGS="$LDFLAGS -L$prefix/lib" \
     meson setup builddir --cross-file "$prefix/crossfile" --prefix=/ "${mpv_args[@]}"
-meson compile -C builddir
+meson compile -C builddir -j "$jobs"
 DESTDIR="$prefix" meson install -C builddir
 endgroup
 

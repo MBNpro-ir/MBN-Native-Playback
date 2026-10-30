@@ -16,6 +16,8 @@ executors:
       DEBIAN_FRONTEND: noninteractive
       TZ: Etc/UTC
       TARGET: x86_64-w64-mingw32
+      MBN_BUILD_JOBS: '2'
+      CCACHE_MAXSIZE: 600M
       WINEDEBUG: '-all'
       MBN_PUBLISH_PRODUCTION: << pipeline.parameters.publish >>
 jobs:
@@ -26,8 +28,10 @@ jobs:
           name: Prepare pinned native build toolchain
           command: |
             apt-get update -qq
-            apt-get install -y --no-install-recommends ca-certificates curl git openssh-client build-essential autoconf automake libtool cmake bzip2 xz-utils zip unzip python3 python3-venv gcc-mingw-w64-x86-64 g++-mingw-w64-x86-64 nasm ninja-build pkgconf wine64 gh
+            apt-get install -y --no-install-recommends ca-certificates curl git openssh-client build-essential autoconf automake libtool cmake bzip2 xz-utils zip unzip python3 python3-venv gcc-mingw-w64-x86-64 g++-mingw-w64-x86-64 nasm ninja-build pkgconf wine64 gh ccache
       - checkout
+      - restore_cache:
+          keys: ['native-ccache-v1-{{ checksum "versions.env" }}-{{ checksum "build.sh" }}']
       - run:
           name: Build LGPL core and execute native seek/frame smoke tests
           no_output_timeout: 15m
@@ -35,7 +39,16 @@ jobs:
             python3 -m venv /tmp/mbn-native-tools
             /tmp/mbn-native-tools/bin/pip install meson==1.7.0
             export PATH="/tmp/mbn-native-tools/bin:$PATH"
+            export CCACHE_DIR="$PWD/.ci-cache/ccache"
+            mkdir -p /tmp/mbn-ccache
+            ln -s /usr/bin/ccache /tmp/mbn-ccache/x86_64-w64-mingw32-gcc-posix
+            ln -s /usr/bin/ccache /tmp/mbn-ccache/x86_64-w64-mingw32-g++-posix
+            export PATH="/tmp/mbn-ccache:$PATH"
             bash tools/ci/circle_native.sh
+            ccache --show-stats
+      - save_cache:
+          key: native-ccache-v1-{{ checksum "versions.env" }}-{{ checksum "build.sh" }}
+          paths: [.ci-cache/ccache]
       - store_artifacts:
           path: out
           destination: native-lgpl-with-corresponding-sources
