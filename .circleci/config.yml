@@ -1,0 +1,64 @@
+version: 2.1
+parameters:
+  run-mode:
+    type: enum
+    enum: [none, native, android-sources]
+    default: none
+  publish:
+    type: boolean
+    default: false
+executors:
+  linux:
+    docker:
+      - image: ubuntu:24.04
+    resource_class: medium
+    environment:
+      TARGET: x86_64-w64-mingw32
+      WINEDEBUG: '-all'
+      MBN_PUBLISH_PRODUCTION: << pipeline.parameters.publish >>
+jobs:
+  native-build-and-verify:
+    executor: linux
+    steps:
+      - run:
+          name: Prepare pinned native build toolchain
+          command: |
+            apt-get update -qq
+            apt-get install -y --no-install-recommends ca-certificates curl git openssh-client build-essential autoconf automake libtool cmake bzip2 xz-utils zip unzip python3 python3-venv gcc-mingw-w64-x86-64 g++-mingw-w64-x86-64 nasm ninja-build pkgconf wine64 gh
+      - checkout
+      - run:
+          name: Build LGPL core and execute native seek/frame smoke tests
+          no_output_timeout: 15m
+          command: |
+            python3 -m venv /tmp/mbn-native-tools
+            /tmp/mbn-native-tools/bin/pip install meson==1.7.0
+            export PATH="/tmp/mbn-native-tools/bin:$PATH"
+            bash tools/ci/circle_native.sh
+      - store_artifacts:
+          path: out
+          destination: native-lgpl-with-corresponding-sources
+  android-corresponding-sources:
+    executor: linux
+    steps:
+      - run: |
+          apt-get update -qq
+          apt-get install -y --no-install-recommends ca-certificates curl git openssh-client xz-utils zip python3
+      - checkout
+      - run: bash android-sources.sh
+      - store_artifacts:
+          path: out
+          destination: android-corresponding-sources
+workflows:
+  native-core:
+    when:
+      and:
+        - equal: [native, << pipeline.parameters.run-mode >>]
+        - equal: [main, << pipeline.git.branch >>]
+    jobs:
+      - native-build-and-verify:
+          context: mbn-native-publish
+  android-sources:
+    when:
+      equal: [android-sources, << pipeline.parameters.run-mode >>]
+    jobs:
+      - android-corresponding-sources
