@@ -13,6 +13,8 @@ executors:
       - image: ubuntu:24.04
     resource_class: medium
     environment:
+      DEBIAN_FRONTEND: noninteractive
+      TZ: Etc/UTC
       TARGET: x86_64-w64-mingw32
       WINEDEBUG: '-all'
       MBN_PUBLISH_PRODUCTION: << pipeline.parameters.publish >>
